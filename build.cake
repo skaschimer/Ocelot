@@ -1,4 +1,4 @@
-﻿#tool dotnet:?package=GitVersion.Tool&version=5.12.0 // 6.0.0-beta.7 supports .NET 8, 7, 6
+﻿#tool dotnet:?package=GitVersion.Tool&version=6.2.0 // .NET 8-9
 #tool dotnet:?package=coveralls.net&version=4.0.1
 #tool nuget:?package=ReportGenerator&version=5.2.4
 #addin nuget:?package=Newtonsoft.Json&version=13.0.3
@@ -50,7 +50,7 @@ var releaseNotes = new List<string>();
 // internal build variables - don't change these.
 string committedVersion = "0.0.0-dev";
 GitVersion versioning = null;
-bool IsTechnicalRelease = false;
+bool IsTechnicalRelease = true;
 
 var target = Argument("target", "Default");
 var slnFile = (target == Release) ? $"./Ocelot.{Release}.sln" : "./Ocelot.sln";
@@ -121,13 +121,20 @@ Task("Version")
 	.Does(() =>
 	{
 		versioning = GetNuGetVersionForCommit();
-		var nugetVersion = versioning.NuGetVersion;
-		Information("SemVer version number: " + nugetVersion);
+		Information("#########################");
+		Information("# SemVer Information");
+		Information("#========================");
+		Information($"# {nameof(versioning.NuGetVersion)}: {versioning.NuGetVersion}");
+		Information($"# {nameof(versioning.BranchName)}: {versioning.BranchName}");
+		Information($"# {nameof(versioning.MajorMinorPatch)}: {versioning.MajorMinorPatch}");
+		Information($"# {nameof(versioning.SemVer)}: {versioning.SemVer}");
+		Information($"# {nameof(versioning.InformationalVersion)}: {versioning.InformationalVersion}");
+		Information("#########################");
 
 		if (IsRunningOnCircleCI())
 		{
 			Information("Persisting version number...");
-			PersistVersion(committedVersion, nugetVersion);
+			PersistVersion(committedVersion, versioning.SemVer);
 		}
 		else
 		{
